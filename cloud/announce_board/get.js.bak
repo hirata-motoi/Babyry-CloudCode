@@ -1,0 +1,86 @@
+exports.get = function(req, res) {
+    if(!req.query.userid) {
+        res.json({"error":"no_userid"});
+        return;
+    }
+    var user_result = new Array();
+    var child_result = new Array();
+    var child_index = 0;
+    var childimage_result = new Array();
+
+    // ユーザー情報ごっそり取得
+    var user = new Parse.Query("_User");
+    user.equalTo("userId", req.query.userid);
+    user.find({
+        success: function(user_result) {
+            var child = new Parse.Query("Child");
+            child.equalTo("familyId", user_result[0].get("familyId"));
+            child.find({
+                success: function(child_result) {
+
+                    var userAAA = new Parse.Query("_User");
+                    userAAA.equalTo("userId", "uZkDpU");
+                    userAAA.find({
+                        success: function(response) {
+                            console.log("aaaaaaaa");
+                            console.log(response[0]);
+                        }
+                    });
+
+                    get_childimage(child_result, childimage_result, child_index);
+                    res.json({"success":childimage_result});
+                },
+                error: function() {
+                    res.json({"error":"no_child_found"});
+                }
+            });
+        },
+        error: function() {
+            res.json({"error":"no_user_found"});
+        }
+    });
+}
+
+function get_childimage(child_result, childimage_result, child_index) {
+    if (child_index >= child_result.length) {
+        return;
+    }
+    console.log(child_index);
+
+    var user = new Parse.Query("_User");
+    user.equalTo("userId", "uZkDpU");
+    user.find({
+        success: function(response) {
+            console.log(response[0]);
+        }
+    });
+
+    var childimage = new Parse.Query("ChildImage" + child_result[child_index].get("childImageShardIndex"));
+    childimage.equalTo("imageOf", child_result[child_index].id);
+    console.log(child_result[child_index].id);
+
+
+
+    try {
+
+    childimage.find({
+        success: function(childimage_response) {
+            console.log("11");
+            childimage_result[child_index] = childimage_response;
+            console.log("22");
+            child_index++;
+            console.log("33");
+            get_childimage(child_result, childimage_result, child_index);
+            console.log("44");
+        },
+        error: function() {
+            console.log("error");
+            res.json({"error":"no_childimage_found"});
+        }
+    });
+
+    } catch(e) {
+        console.log("aaaaaaaa");
+        console.log(e);
+    }
+}
