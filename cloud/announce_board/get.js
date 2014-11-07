@@ -72,11 +72,11 @@ exports.get = function(req, res) {
     function get_childimage_data_callback(result, childObjectId) {
         child_num--;
         if (child_num < 1) {
-            get_announch_info();
+            get_announce_info();
         }
     }
 
-    function get_announch_info() {
+    function get_announce_info() {
 
         var elapsedDate = get_elapse_date();
         var activity_ratio = get_activity(elapsedDate);
