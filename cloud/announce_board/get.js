@@ -58,7 +58,7 @@ exports.get = function(req, res) {
                                 childImageData.push(result);
                                 childNum--;
                                 if (childNum == 0) {
-                                    callback(null);
+                                    callback();
                                 }
                             },
                             error: function() {
@@ -82,7 +82,7 @@ exports.get = function(req, res) {
                         var message = result[i].get("message");
                         announceInfoData[key] = {"title":title, "message":message};
                     }
-                    callback(null);
+                    callback();
                 },
                 error: function() {
                     res.json({"error":"error_in_get_announce_info"});
@@ -98,7 +98,7 @@ exports.get = function(req, res) {
                         var value = result[i].get("value");
                         announceInfoParamsData[key] = value;
                     }
-                    callback(null);
+                    callback();
                 },
                 error: function() {
                     res.json({"error":"error_in_get_announce_info_params"});
@@ -114,7 +114,7 @@ exports.get = function(req, res) {
                         var key = result[i].get("displayed");
                         announceInfoHistoryData[key] = "1";
                     }
-                    callback(null);
+                    callback();
                 },
                 error: function() {
                     res.json({"error":"error_in_get_announce_info_history_params"});
