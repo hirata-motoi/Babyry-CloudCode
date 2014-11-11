@@ -132,6 +132,7 @@ exports.get = function(req, res) {
         var childHasBirthday = checkChildHasBirthday();
         var userRegisterCompleted = checkUserRegisterCompleted();
 
+        console.log("elapseDate:" + elapseDate + " interval:" + announceInfoParamsData["interval"] + " activeRatio:" + activeRatio + " activeRatio:" + announceInfoParamsData["activeRatio"]);
         if (elapseDate > announceInfoParamsData["interval"] && activeRatio > announceInfoParamsData["activeRatio"]) {
             if (!childHasBirthday && !announceInfoHistoryData["childBirthday"]) {
                 returnResponse("childBirthday");
@@ -149,18 +150,7 @@ exports.get = function(req, res) {
         if (key == "") {
             res.json({"error":"no_announce_info_found"});
         } else {
-            var AnnounceInfoHistory = Parse.Object.extend("AnnounceInfoHistory");
-            var announceInfoHistory = new AnnounceInfoHistory();
-            announceInfoHistory.set("userId", userData[0].get("userId"));
-            announceInfoHistory.set("displayed", key);
-            announceInfoHistory.save(null, {
-                success: function(result) {
-                    res.json({"key":key,"title":announceInfoData[key]["title"],"message":announceInfoData[key]["message"]});
-                },
-                error: function(gameScore, error) {
-                    res.json({"error":"cannot_save_info_history"});
-                }
-            });
+            res.json({"key":key,"title":announceInfoData[key]["title"],"message":announceInfoData[key]["message"]});
         }
     }
 
