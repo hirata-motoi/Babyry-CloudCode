@@ -5,9 +5,11 @@ exports.get = function(req, res) {
     // check of reqest parameter exist
     if(!req.query) {
         res.json({"error":"no_req_param"});
+        return;
     }
     if(!req.query.userid) {
         res.json({"error":"no_userid"});
+        return;
     }
 
     var userData = new Array();
@@ -25,15 +27,18 @@ exports.get = function(req, res) {
                 success: function(result) {
                     if (result.length == 0) {
                         res.json({"error":"no_user_found"});
+                        return;
                     }
                     if (!result[0].get("familyId")) {
                         res.json({"error":"cannot get familyId"});
+                        return;
                     }
                     userData = result;
                     callback(null, result[0].get("familyId"));
                 },
                 error: function() {
                     res.json({"error":"error_in_get_user_data"});
+                    return;
                 }
             });
         },
@@ -44,6 +49,7 @@ exports.get = function(req, res) {
                 success: function(result) {
                     if (result.length == 0) {
                         res.json({"error":"no_child_found"});
+                        return;
                     }
                     childData = result;
                     var childNum = result.length;
@@ -63,12 +69,14 @@ exports.get = function(req, res) {
                             },
                             error: function() {
                                 res.json({"error":"error_in_get_childimage_data"});
+                                return;
                             }
                         });
                     }
                 },
                 error: function() {
                     res.json({"error":"error_in_get_child_data"});
+                    return;
                 }
             });
         },
@@ -86,6 +94,7 @@ exports.get = function(req, res) {
                 },
                 error: function() {
                     res.json({"error":"error_in_get_announce_info"});
+                    return;
                 }
             });
         },
@@ -102,6 +111,7 @@ exports.get = function(req, res) {
                 },
                 error: function() {
                     res.json({"error":"error_in_get_announce_info_params"});
+                    return;
                 }
             });
         },
@@ -118,12 +128,14 @@ exports.get = function(req, res) {
                 },
                 error: function() {
                     res.json({"error":"error_in_get_announce_info_history_params"});
+                    return;
                 }
             });
         }
     ], function (err, result) {
         if(err) {
             res.json({"error":err});
+            return;
         }
 
         var elapseDate = getElapseDate();
@@ -149,8 +161,10 @@ exports.get = function(req, res) {
     function returnResponse(key) {
         if (key == "") {
             res.json({"error":"no_announce_info_found"});
+            return;
         } else {
             res.json({"key":key,"title":announceInfoData[key]["title"],"message":announceInfoData[key]["message"]});
+            return;
         }
     }
 
