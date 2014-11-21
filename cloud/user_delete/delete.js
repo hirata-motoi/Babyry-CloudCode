@@ -6,7 +6,16 @@ exports.execute_delete = function(request, response) {
         requestCount = 0,
         queue  = [],
         errors = [],
-        deletedObjects = [];
+        deletedObjects = [],
+        classFunctionMap = {
+            "User"        : deleteUsers,
+            "Child"       : deleteChildren,
+            "ChildImage"  : deleteChildImages,
+            "Comment"     : deleteComments,
+            "FamilyRole"  : deleteFamilyRoles,
+            "TutorialMap" : deleteTutorialMaps
+        };
+
 
     function deleteUsers(args) {
         var users = args[0],
@@ -92,7 +101,6 @@ exports.execute_delete = function(request, response) {
     function execute() {
         var i, unit, func, args;
         for (i in queue) {
-            console.log(queue[i]);
             unit = queue[i];
             func = unit["function"];
             args = unit["args"];
@@ -147,56 +155,21 @@ exports.execute_delete = function(request, response) {
         finalize();
     }
 
-    if (params.User && params.User.length > 0) {
-        requestCount += params.User.length;
-        queue.push({
-            "function": deleteUsers,
-            "args": [params.User]
-        });
-    }
-
-    if (params.Child && params.Child.length > 0) {
-        requestCount += params.Child.length;
-        queue.push({
-            "function": deleteChildren,
-            "args": [params.Child]
-        });
-    }
-
-    if (params.FamilyRole && params.FamilyRole.length > 0) {
-        requestCount += params.FamilyRole.length;
-        queue.push({
-            "function": deleteFamilyRoles,
-            "args": [params.FamilyRole]
-        });
-    }
-
-    if (params.TutorialMap && params.TutorialMap.length > 0) {
-        requestCount += params.TutorialMap.length;
-        queue.push({
-            "function": deleteTutorialMaps,
-            "args": [params.TutorialMap]
-        });
-    }
-
-    if (params.ChildImage) {
-        for (i in params.ChildImage) {
-            childImageByShardIndex = params.ChildImage[i];
-            requestCount += childImageByShardIndex.childImages.length;
+    for (var className in params) {
+        if (className === "ChildImage" || className === "Comment") {
+            for (shardIndex in params[className]) {
+                dataByShardIndex = params[className][shardIndex];
+                requestCount += dataByShardIndex.objectIds.length;
+                queue.push({
+                    "function": classFunctionMap[className],
+                    "args": [dataByShardIndex.className, dataByShardIndex.objectIds]
+                });
+            }
+        } else {
+            requestCount += params[className].length;
             queue.push({
-                "function": deleteChildImages,
-                "args": [childImageByShardIndex.className, childImageByShardIndex.childImages]
-            });
-        }
-    }
-
-    if (params.Comment) {
-        for (i in params.Comment) {
-            commentByShardIndex = params.Comment[i];
-            requestCount += commentByShardIndex.comments.length;
-            queue.push({
-                "function": deleteComments,
-                "args": [commentByShardIndex.className, commentByShardIndex.comments]
+                "function": classFunctionMap[className],
+                "args": [ params[className] ]
             });
         }
     }
