@@ -13,7 +13,8 @@ exports.execute_delete = function(request, response) {
             "ChildImage"  : deleteChildImages,
             "Comment"     : deleteComments,
             "FamilyRole"  : deleteFamilyRoles,
-            "TutorialMap" : deleteTutorialMaps
+            "TutorialMap" : deleteTutorialMaps,
+            "EmailVerify" : deleteEmailVerifies
         };
 
 
@@ -99,6 +100,20 @@ exports.execute_delete = function(request, response) {
         query.find({
             success: function(results) {
                 findSuccess(results, tutorialMaps);
+            },
+            error: findError
+        });
+    }
+
+    function deleteEmailVerifies(args) {
+        var query = new Parse.Query("EmailVerify"),
+            emailVerifies = args[0];
+
+        query.containedIn("objectId", emailVerifies);
+        query.limit(1000);
+        query.find({
+            success: function(results) {
+                findSuccess(results, emailVerifies);
             },
             error: findError
         });
