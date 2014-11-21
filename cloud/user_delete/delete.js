@@ -92,7 +92,6 @@ exports.execute_delete = function(request, response) {
     function execute() {
         var i, unit, func, args;
         for (i in queue) {
-            console.log("ququq");
             console.log(queue[i]);
             unit = queue[i];
             func = unit["function"];
@@ -116,7 +115,7 @@ exports.execute_delete = function(request, response) {
     }
 
     function findSuccess(results, targetObjects) {
-        // findできたresultsがよりも少なかった場合
+        // findできたresultsがtargetObjectsよりも少なかった場合
         // requestCountを減らしておく
         // ニアミスでデータが消された等のケース
         if (targetObjects.length !== results.length) {
