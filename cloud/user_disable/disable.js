@@ -5,96 +5,95 @@ exports.disable = function(request, response) {
         commentByShardIndex,
         requestCount = 0,
         queue  = [],
-        errors = [];
+        errors = [],
+        deletedObjects = [];
 
-    function disableUsers(args) {
-        var User = Parse.Object.extend("_User"),
-            users = args[0],
-            u,
-            i;
-        for (i in users) {
-            u = new User();
-            u.set("id", users[i]);
-            u.set("operationDisabled", true);
-            u.save(null, { useMasterKey: true }).then(handleSuccess, handleError);
-        }
-    }
-    
-    function disableChildren(args) {
-        var Child = Parse.Object.extend("Child"),
-            children = args[0],
-            i,
-            c;
-        for (i in children) {
-            c = new Child();
-            c.set("id", children[i]);
-            c.set("operationDisabled", true);
-            c.setACL(inaccessibleACL());
-            c.save(null, {}).then(handleSuccess, handleError);
-        }
+    function deleteUsers(args) {
+        var users = args[0],
+            query = new Parse.Query("_User");
+
+        Parse.Cloud.useMasterKey();
+        query.containedIn("objectId", users);
+        query.find({
+            success: function(results) {
+                findSuccess(results, users)
+            },
+            error: findError
+        });
     }
 
-    function disableFamilyRoles(args) {
-        var FamilyRole = Parse.Object.extend("FamilyRole"),
-            familyRoles = args[0],
-            i,
-            f;
-        for (i in familyRoles) {
-            f = new FamilyRole();
-            f.set("id", familyRoles[i]);
-            f.set("operationDisabled", true);
-            f.setACL(inaccessibleACL());
-            f.save(null, {}).then(handleSuccess, handleError);
-        }
+    function deleteChildren(args) {
+        var query = new Parse.Query("Child"),
+            children = args[0];
+
+        query.containedIn("objectId", children);
+        query.find({
+            success: function(results) {
+                findSuccess(results, children)
+            },
+            error: findError
+        });
     }
 
-    function disableChildImages(args) {
+    function deleteFamilyRoles(args) {
+        var query = new Parse.Query("FamilyRole"),
+            familyRoles = args[0];
+
+        query.containedIn("objectId", familyRoles);
+        query.find({
+            success: function(results) {
+                findSuccess(results, familyRoles);
+            },
+            error: findError
+        });
+    }
+
+    function deleteChildImages(args) {
         var className = args[0],
             childImages = args[1],
-            ChildImage = Parse.Object.extend(className),
-            i,
-            c;
-        for (i in childImages) {
-            c = new ChildImage();
-            c.set("id", childImages[i]);
-            c.set("operationDisabled", true);
-            c.setACL(inaccessibleACL());
-            c.save(null, {}).then(handleSuccess, handleError);
-        }
+            query = new Parse.Query(className);
+
+        query.containedIn("objectId", childImages);
+        query.find({
+            success: function(results) {
+                findSuccess(results, childImages);
+            },
+            error: findError
+        });
     }
 
-    function disableComments(args) {
+    function deleteComments(args) {
         var className = args[0],
             comments = args[1],
-            Comment = Parse.Object.extend(className),
-            i,
-            c;
-        for (i in comments) {
-            c = new Comment();
-            c.set("id", comments[i]);
-            c.set("operationDisabled", true);
-            c.setACL(inaccessibleACL());
-            c.save(null, {}).then(handleSuccess, handleError);
-        }
+            query = new Parse.Query(className);
+
+        query.containedIn("objectId", comments);
+        query.find({
+            success: function(results) {
+                findSuccess(results, comments);
+            },
+            error: findError
+        });
     }
 
-    function disableTutorialMaps(args) {
-        var TutorialMap = Parse.Object.extend("TutorialMap"),
-            tutorialMaps = args[0],
-            i,
-            t;
-        for (i in tutorialMaps) {
-            t = new TutorialMap();
-            t.set("id", tutorialMaps[i]);
-            t.set("operationDisabled", true);
-            t.setACL(inaccessibleACL());
-            t.save(null, {}).then(handleSuccess, handleError);
-        }
+    function deleteTutorialMaps(args) {
+        var query = new Parse.Query("TutorialMap"),
+            tutorialMaps = args[0];
+
+        query.containedIn("objectId", tutorialMaps);
+        query.find({
+            success: function(results) {
+                findSuccess(results, tutorialMaps);
+            },
+            error: findError
+        });
     }
 
     function execute() {
         var i, unit, func, args;
         for (i in queue) {
+            console.log("ququq");
+            console.log(queue[i]);
             unit = queue[i];
             func = unit["function"];
             args = unit["args"];
@@ -107,58 +106,75 @@ exports.disable = function(request, response) {
             return;
         }
         if (errors.length > 0) {
-            rsponse.error(errors);
+            console.log(errors);
+            response.error(errors);
         } else {
-            response.success("normal ended");
+            response.success(deletedObjects);
+        }
+        return;
+    }
+
+    function findSuccess(results, targetObjects) {
+        // findできたresultsがよりも少なかった場合
+        // requestCountを減らしておく
+        // ニアミスでデータが消された等のケース
+        if (targetObjects.length !== results.length) {
+            requestCount -= (targetObjects.length - results.length);
+        }
+
+        for (var i = 0; i < results.length; i++) {
+            results[i].destroy({
+                success: handleSuccess,
+                error: handleError
+            });
         }
     }
 
-    function handleSuccess() {
+    function findError(error) {
+        console.log(error);
+    }
+    
+
+    function handleSuccess(obj) {
         requestCount--;
+        deletedObjects.push(obj);
         finalize();
     }
 
-    function handleError(error) {
+    function handleError(obj, error) {
         requestCount--;
         errors.push(error);
         finalize();
     }
 
-    function inaccessibleACL() {
-        var acl = new Parse.ACL();
-        acl.setPublicReadAccess(false);
-        acl.setPublicWriteAccess(false);
-        return acl;
-    }
-
-    if (params.User) {
+    if (params.User && params.User.length > 0) {
         requestCount += params.User.length;
         queue.push({
-            "function": disableUsers,
+            "function": deleteUsers,
             "args": [params.User]
         });
     }
 
-    if (params.Child) {
+    if (params.Child && params.Child.length > 0) {
         requestCount += params.Child.length;
         queue.push({
-            "function": disableChildren,
+            "function": deleteChildren,
             "args": [params.Child]
         });
     }
 
-    if (params.FamilyRole) {
+    if (params.FamilyRole && params.FamilyRole.length > 0) {
         requestCount += params.FamilyRole.length;
         queue.push({
-            "function": disableFamilyRoles,
+            "function": deleteFamilyRoles,
             "args": [params.FamilyRole]
         });
     }
 
-    if (params.TutorialMap) {
+    if (params.TutorialMap && params.TutorialMap.length > 0) {
         requestCount += params.TutorialMap.length;
         queue.push({
-            "function": disableTutorialMaps,
+            "function": deleteTutorialMaps,
             "args": [params.TutorialMap]
         });
     }
@@ -168,7 +184,7 @@ exports.disable = function(request, response) {
             childImageByShardIndex = params.ChildImage[i];
             requestCount += childImageByShardIndex.childImages.length;
             queue.push({
-                "function": disableChildImages,
+                "function": deleteChildImages,
                 "args": [childImageByShardIndex.className, childImageByShardIndex.childImages]
             });
         }
@@ -179,11 +195,11 @@ exports.disable = function(request, response) {
             commentByShardIndex = params.Comment[i];
             requestCount += commentByShardIndex.comments.length;
             queue.push({
-                "function": disableComments,
+                "function": deleteComments,
                 "args": [commentByShardIndex.className, commentByShardIndex.comments]
             });
         }
     }
 
     execute();
-};
+}

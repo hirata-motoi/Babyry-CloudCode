@@ -1,6 +1,6 @@
 require('cloud/app.js');
 
-Parse.Cloud.define("user_disable", function(request, response) {
+Parse.Cloud.define("user_delete", function(request, response) {
     var params = request.params,
         i,
         childImageByShardIndex,
