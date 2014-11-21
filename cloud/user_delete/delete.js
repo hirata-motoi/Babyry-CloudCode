@@ -23,6 +23,7 @@ exports.execute_delete = function(request, response) {
 
         Parse.Cloud.useMasterKey();
         query.containedIn("objectId", users);
+        query.limit(1000);
         query.find({
             success: function(results) {
                 findSuccess(results, users)
@@ -36,6 +37,7 @@ exports.execute_delete = function(request, response) {
             children = args[0];
 
         query.containedIn("objectId", children);
+        query.limit(1000);
         query.find({
             success: function(results) {
                 findSuccess(results, children)
@@ -49,6 +51,7 @@ exports.execute_delete = function(request, response) {
             familyRoles = args[0];
 
         query.containedIn("objectId", familyRoles);
+        query.limit(1000);
         query.find({
             success: function(results) {
                 findSuccess(results, familyRoles);
@@ -63,6 +66,7 @@ exports.execute_delete = function(request, response) {
             query = new Parse.Query(className);
 
         query.containedIn("objectId", childImages);
+        query.limit(1000);
         query.find({
             success: function(results) {
                 findSuccess(results, childImages);
@@ -77,6 +81,7 @@ exports.execute_delete = function(request, response) {
             query = new Parse.Query(className);
 
         query.containedIn("objectId", comments);
+        query.limit(1000);
         query.find({
             success: function(results) {
                 findSuccess(results, comments);
@@ -90,6 +95,7 @@ exports.execute_delete = function(request, response) {
             tutorialMaps = args[0];
 
         query.containedIn("objectId", tutorialMaps);
+        query.limit(1000);
         query.find({
             success: function(results) {
                 findSuccess(results, tutorialMaps);
