@@ -14,7 +14,7 @@ exports.get = function(req, res) {
 
     // get comments from chidIds
     var shardNum = 2;
-    var oneQueryLimit = 10;
+    var oneQueryLimit = 1000;
     var childIds = req.query.childId;
     var commentsHash = new Object();
    
